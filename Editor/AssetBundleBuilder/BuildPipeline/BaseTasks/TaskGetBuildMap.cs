@@ -7,60 +7,61 @@ using UnityEditor;
 
 namespace YooAsset.Editor
 {
-	public class TaskGetBuildMap
-	{
-		/// <summary>
-		/// 生成资源构建上下文
-		/// </summary>
-		public BuildMapContext CreateBuildMap(BuildParameters buildParameters)
-		{
+    public class TaskGetBuildMap
+    {
+        /// <summary>
+        /// 生成资源构建上下文
+        /// </summary>
+        public BuildMapContext CreateBuildMap(BuildParameters buildParameters)
+        {
             BuildMapContext context = new BuildMapContext();
-			var buildMode = buildParameters.BuildMode;
-			var packageName = buildParameters.PackageName;
+            var buildMode = buildParameters.BuildMode;
+            var packageName = buildParameters.PackageName;
 
-			Dictionary<string, BuildAssetInfo> allBuildAssetInfos = new Dictionary<string, BuildAssetInfo>(1000);
+            Dictionary<string, BuildAssetInfo> allBuildAssetInfos = new Dictionary<string, BuildAssetInfo>(1000);
 
-			// 1. 获取所有收集器收集的资源
-			var collectResult = AssetBundleCollectorSettingData.Setting.GetPackageAssets(buildMode, packageName);
+            // 1. 获取所有收集器收集的资源
+            var collectResult = AssetBundleCollectorSettingData.Setting.GetPackageAssets(buildMode, packageName);
             List<CollectAssetInfo> allCollectAssets = collectResult.CollectAssets;
 
-			// 2. 剔除未被引用的依赖项资源
+            // 2. 剔除未被引用的依赖项资源
             RemoveZeroReferenceAssets(context, allCollectAssets);
 
-			// 3. 录入所有收集器主动收集的资源
+            // 3. 录入所有收集器主动收集的资源
             foreach (var collectAssetInfo in allCollectAssets)
-			{
+            {
                 if (allBuildAssetInfos.ContainsKey(collectAssetInfo.AssetInfo.AssetPath))
-				{
+                {
                     throw new Exception($"Should never get here !");
                 }
-					if (collectAssetInfo.CollectorType != ECollectorType.MainAssetCollector)
-					{
-						if (collectAssetInfo.AssetTags.Count > 0)
-						{
-							collectAssetInfo.AssetTags.Clear();
+
+                if (collectAssetInfo.CollectorType != ECollectorType.MainAssetCollector)
+                {
+                    if (collectAssetInfo.AssetTags.Count > 0)
+                    {
+                        collectAssetInfo.AssetTags.Clear();
                         string warning = BuildLogger.GetErrorMessage(ErrorCode.RemoveInvalidTags, $"Remove asset tags that don't work, see the asset collector type : {collectAssetInfo.AssetInfo.AssetPath}");
-							BuildLogger.Warning(warning);
-						}
-					}
+                        BuildLogger.Warning(warning);
+                    }
+                }
 
                 var buildAssetInfo = new BuildAssetInfo(collectAssetInfo.CollectorType, collectAssetInfo.BundleName, collectAssetInfo.Address, collectAssetInfo.AssetInfo);
-					buildAssetInfo.AddAssetTags(collectAssetInfo.AssetTags);
+                buildAssetInfo.AddAssetTags(collectAssetInfo.AssetTags);
                 allBuildAssetInfos.Add(collectAssetInfo.AssetInfo.AssetPath, buildAssetInfo);
-				}
+            }
 
-			// 4. 录入所有收集资源依赖的其它资源
+            // 4. 录入所有收集资源依赖的其它资源
             foreach (var collectAssetInfo in allCollectAssets)
-			{
-				string bundleName = collectAssetInfo.BundleName;
+            {
+                string bundleName = collectAssetInfo.BundleName;
                 foreach (var dependAsset in collectAssetInfo.DependAssets)
-				{
-                    if (allBuildAssetInfos.ContainsKey(dependAsset.AssetPath))
-					{
-                        allBuildAssetInfos[dependAsset.AssetPath].AddReferenceBundleName(bundleName);
-					}
-					else
-					{
+                {
+                    if (allBuildAssetInfos.TryGetValue(dependAsset.AssetPath, out var value))
+                    {
+                        value.AddReferenceBundleName(bundleName);
+                    }
+                    else
+                    {
                         var buildAssetInfo = new BuildAssetInfo(dependAsset);
                         buildAssetInfo.AddReferenceBundleName(bundleName);
                         allBuildAssetInfos.Add(dependAsset.AssetPath, buildAssetInfo);
@@ -100,7 +101,7 @@ namespace YooAsset.Editor
                 }
             }
 
-			// 7. 记录关键信息
+            // 7. 计算共享资源的包名
             if (buildParameters.EnableSharePackRule)
             {
                 PreProcessPackShareBundle(buildParameters, collectResult.Command, allBuildAssetInfos);
@@ -122,32 +123,33 @@ namespace YooAsset.Editor
             // 8. 记录关键信息
             context.AssetFileCount = allBuildAssetInfos.Count;
             context.Command = collectResult.Command;
-			// 9. 移除不参与构建的资源
-			List<BuildAssetInfo> removeBuildList = new List<BuildAssetInfo>();
-			foreach (var buildAssetInfo in allBuildAssetInfos.Values)
-			{
-				if (buildAssetInfo.HasBundleName() == false)
-					removeBuildList.Add(buildAssetInfo);
-			}
-			foreach (var removeValue in removeBuildList)
-			{
+
+            // 9. 移除不参与构建的资源
+            List<BuildAssetInfo> removeBuildList = new List<BuildAssetInfo>();
+            foreach (var buildAssetInfo in allBuildAssetInfos.Values)
+            {
+                if (buildAssetInfo.HasBundleName() == false)
+                    removeBuildList.Add(buildAssetInfo);
+            }
+            foreach (var removeValue in removeBuildList)
+            {
                 allBuildAssetInfos.Remove(removeValue.AssetInfo.AssetPath);
-			}
+            }
 
-			// 10. 构建资源列表
-			var allPackAssets = allBuildAssetInfos.Values.ToList();
-			if (allPackAssets.Count == 0)
-			{
-				string message = BuildLogger.GetErrorMessage(ErrorCode.PackAssetListIsEmpty, "The pack asset info is empty !");
-				throw new Exception(message);
-			}
-			foreach (var assetInfo in allPackAssets)
-			{
-				context.PackAsset(assetInfo);
-			}
+            // 10. 构建资源列表
+            var allPackAssets = allBuildAssetInfos.Values.ToList();
+            if (allPackAssets.Count == 0)
+            {
+                string message = BuildLogger.GetErrorMessage(ErrorCode.PackAssetListIsEmpty, "The pack asset info is empty !");
+                throw new Exception(message);
+            }
+            foreach (var assetInfo in allPackAssets)
+            {
+                context.PackAsset(assetInfo);
+            }
 
-			return context;
-		}
+            return context;
+        }
         private void RemoveZeroReferenceAssets(BuildMapContext context, List<CollectAssetInfo> allCollectAssets)
         {
             // 1. 检测依赖资源收集器是否存在

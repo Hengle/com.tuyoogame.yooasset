@@ -1,4 +1,5 @@
-﻿namespace YooAsset.Editor
+﻿
+namespace YooAsset.Editor
 {
     public interface IBuildPipeline
     {
