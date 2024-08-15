@@ -6,9 +6,9 @@ namespace YooAsset
     public abstract class HandleBase : IEnumerator
     {
         private readonly AssetInfo _assetInfo;
-        internal ProviderBase Provider { private set; get; }
+        internal ProviderOperation Provider { private set; get; }
 
-        internal HandleBase(ProviderBase provider)
+        internal HandleBase(ProviderOperation provider)
         {
             Provider = provider;
             _assetInfo = provider.MainAssetInfo;
@@ -16,6 +16,9 @@ namespace YooAsset
 
         internal abstract void InvokeCallback();
 
+        /// <summary>
+        /// 是否成功
+        /// </summary>
         public bool IsSucceed
         {
             get { return IsDone && Status == EOperationStatus.Succeed; }

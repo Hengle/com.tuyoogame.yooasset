@@ -9,7 +9,7 @@ namespace YooAsset
     {
         void Start()
         {
-            _ = typeof(YooAsset.CacheFileInfo);
+            /*_ = typeof(YooAsset.CacheFileInfo);
             _ = typeof(YooAsset.CacheHelper);
             _ = typeof(YooAsset.CacheManager);
             _ = typeof(YooAsset.EVerifyLevel);
@@ -179,7 +179,7 @@ namespace YooAsset
             _ = typeof(YooAsset.DownloaderOperation.OnDownloadOver);
             _ = typeof(YooAsset.DownloaderOperation.OnDownloadProgress);
             _ = typeof(YooAsset.DownloaderOperation.OnDownloadError);
-            _ = typeof(YooAsset.DownloaderOperation.OnStartDownloadFile);
+            _ = typeof(YooAsset.DownloaderOperation.OnStartDownloadFile);*/
         }
     }
 }
