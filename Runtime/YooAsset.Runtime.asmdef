@@ -1,7 +1,9 @@
 {
     "name": "YooAsset.Runtime",
     "rootNamespace": "YooAsset",
-    "references": [],
+    "references": [
+        "StarkWebGL"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -9,6 +11,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.bytedance.starksdk",
+            "expression": "",
+            "define": "DOUYIN_MINI_GAME"
+        }
+    ],
     "noEngineReferences": false
 }
