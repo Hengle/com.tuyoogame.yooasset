@@ -14,6 +14,16 @@ public static class DouYinFileSystemCreater
         fileSystemParams.AddParameter("REMOTE_SERVICES", remoteServices);
         return fileSystemParams;
     }
+
+    public static FileSystemParameters CreateDouYinFileSystemParameters(string packageName)
+    {
+        var fileSystemClass = typeof(DouYinFileSystem).FullName;
+        var fileSystemParams = new FileSystemParameters(fileSystemClass, null);
+        var webRoot = PathUtility.Combine(Application.persistentDataPath, YooAssetSettingsData.Setting.DefaultYooFolderName, packageName);
+        var webRemoteServices = new DouYinFileSystem.WebRemoteServices(webRoot);
+        fileSystemParams.AddParameter("REMOTE_SERVICES", webRemoteServices);
+        return fileSystemParams;
+    }
 }
 
 /// <summary>
@@ -201,7 +211,7 @@ internal class DouYinFileSystem : IFileSystem
 
     #endregion
 
-    private class WebRemoteServices : IRemoteServices
+    public sealed class WebRemoteServices : IRemoteServices
     {
         protected readonly Dictionary<string, string> _mapping = new(10000);
         private readonly string _webPackageRoot;
