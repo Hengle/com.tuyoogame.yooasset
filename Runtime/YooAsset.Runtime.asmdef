@@ -2,7 +2,8 @@
     "name": "YooAsset.Runtime",
     "rootNamespace": "YooAsset",
     "references": [
-        "StarkWebGL"
+        "StarkWebGL",
+        "Wx"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
