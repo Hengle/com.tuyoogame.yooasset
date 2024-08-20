@@ -6,10 +6,19 @@ using WeChatWASM;
 
 public static class WechatFileSystemCreater
 {
-    public static FileSystemParameters CreateWechatFileSystemParameters(IRemoteServices remoteServices)
+    public static FileSystemParameters CreateWechatFileSystemParameters(IRemoteServices remoteServices = null)
     {
         string fileSystemClass = typeof(WechatFileSystem).FullName;
         var fileSystemParams = new FileSystemParameters(fileSystemClass, null);
+        fileSystemParams.AddParameter("REMOTE_SERVICES", remoteServices);
+        return fileSystemParams;
+    }
+
+    public static FileSystemParameters CreateWechatPathFileSystemParameters(string buildinPackRoot)
+    {
+        string fileSystemClass = typeof(WechatFileSystem).FullName;
+        var fileSystemParams = new FileSystemParameters(fileSystemClass, null);
+        IRemoteServices remoteServices = new WechatFileSystem.WebRemoteServices(buildinPackRoot);
         fileSystemParams.AddParameter("REMOTE_SERVICES", remoteServices);
         return fileSystemParams;
     }
@@ -21,7 +30,7 @@ public static class WechatFileSystemCreater
 /// </summary>
 internal class WechatFileSystem : IFileSystem
 {
-    private class WebRemoteServices : IRemoteServices
+    public class WebRemoteServices : IRemoteServices
     {
         private readonly string _webPackageRoot;
         protected readonly Dictionary<string, string> _mapping = new Dictionary<string, string>(10000);
